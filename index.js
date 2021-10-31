@@ -6,7 +6,7 @@ const { GoalNear, GoalBreakBlock } = require("mineflayer-pathfinder").goals;
 const blockFinderPlugin = require("mineflayer-blockfinder")(mineflayer);
 const bot = mineflayer.createBot({
   username: "zPrutsor",
-  port: 52153,
+  port: 62974,
   host: "localhost",
 });
 
@@ -22,7 +22,7 @@ const get_me_some_bamboo = () => {
 
   const blocks = bot.findBlocks({
     matching: mcData.blocksByName.bamboo.id,
-    maxDistance: 256,
+    maxDistance: 128,
     count: 100000,
   });
   if (!blocks.length) {
@@ -31,7 +31,6 @@ const get_me_some_bamboo = () => {
   } else {
     cant_find = false;
   }
-  console.log(!blocks.length);
   let done = false;
   blocks.forEach(async (block_pos) => {
     const block = bot.blockAt(block_pos);
@@ -61,7 +60,7 @@ const get_me_some_bamboo = () => {
       //   console.log(err);
       // }
       bot.collectBlock.collect(block_under, (err) => {
-        console.log(err);
+        console.log("Collected");
         place_some_bamboo();
         return;
       });
@@ -69,21 +68,27 @@ const get_me_some_bamboo = () => {
   });
 };
 
-const place_some_bamboo = () => {
+const place_some_bamboo = async () => {
+  console.log("Placing some bamboo");
   let mcData = require("minecraft-data")(bot.version);
   const defaultMove = new Movements(bot, mcData);
 
+  console.log("finding blocks");
   const blocks = bot.findBlocks({
     matching: mcData.blocksByName.grass_block.id,
     maxDistance: 64,
-    count: 10000000,
+    count: 1000,
   });
+  console.log("found blocks");
 
   let done = false;
-  blocks.forEach(async (block_pos) => {
+  for (var i = 0; i < blocks.length; i++) {
+    // console.log(i);
+    const block_pos = blocks[i];
     const block = bot.blockAt(block_pos);
     const block_above = bot.blockAt(block_pos.offset(0, 1, 0));
 
+    // console.log("wow");
     if (block_above.name === "air" && !done) {
       done = true;
       const bamboo = bot.inventory.findInventoryItem("bamboo", null);
@@ -91,6 +96,7 @@ const place_some_bamboo = () => {
       if (bamboo) {
         await bot.equip(bamboo);
         await bot.pathfinder.setMovements(defaultMove);
+        console.log("moving");
         await bot.pathfinder.setGoal(
           new GoalNear(
             block_above.position.x,
@@ -99,27 +105,32 @@ const place_some_bamboo = () => {
             3
           )
         );
-        try {
-          await bot.lookAt(block_pos);
-          await bot.placeBlock(block, new Vec3(0, 1, 0));
-        } catch (err) {
-          done = false;
-        }
+        await bot.lookAt(block_pos);
+        console.log("arrived");
 
+        console.log("placing");
+        await bot.placeBlock(block, new Vec3(0, 1, 0), () => {
+          console.log("yes");
+        });
+        console.log("placed");
         place_some_bamboo();
+        console.log("done");
       } else {
         console.log("No bambooooo");
+        done = true;
         get_me_some_bamboo();
         // bot.say("Give me some bamboo you fucking twat");
       }
     }
-  });
+  }
+  // console.log("done");
 };
 
 bot.on("physicTick", () => {
   let mcData = require("minecraft-data")(bot.version);
 
   if (cant_find) {
+    console.log("wow");
     const blocks = bot.findBlocks({
       matching: mcData.blocksByName.bamboo.id,
       maxDistance: 64,
