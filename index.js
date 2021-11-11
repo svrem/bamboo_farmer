@@ -65,15 +65,10 @@ const place_some_bamboo = async () => {
   console.log("found blocks");
 
   let done = false;
-  // console.log(blocks.length);
   for (var i = 0; i < blocks.length; i++) {
-    // console.log(i);
     const block_pos = blocks[i];
     const block = bot.blockAt(block_pos);
     const block_above = bot.blockAt(block_pos.offset(0, 1, 0));
-
-    // console.log("wow");
-    // console.log(block_above.name, done);
     if ((block_above.name === "air" || block_above.name === "grass") && !done) {
       console.log("found a place to place");
 
@@ -106,11 +101,9 @@ const place_some_bamboo = async () => {
         console.log("No bambooooo");
         done = true;
         get_me_some_bamboo();
-        // bot.say("Give me some bamboo you fucking twat");
       }
     }
   }
-  // console.log("done");
 };
 
 bot.on("physicTick", () => {
