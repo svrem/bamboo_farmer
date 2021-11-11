@@ -14,8 +14,6 @@ const bot = mineflayer.createBot({
   password: process.env.PASSWORD,
 });
 
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
 bot.loadPlugin(autoeat);
 bot.loadPlugin(require("mineflayer-collectblock").plugin);
 bot.loadPlugin(pathfinder);
