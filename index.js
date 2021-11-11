@@ -1,17 +1,22 @@
+require("dotenv").config();
+
 const mineflayer = require("mineflayer");
+const autoeat = require("mineflayer-auto-eat");
 const Vec3 = require("vec3");
 const pathfinder = require("mineflayer-pathfinder").pathfinder;
 const Movements = require("mineflayer-pathfinder").Movements;
 const { GoalNear, GoalBreakBlock } = require("mineflayer-pathfinder").goals;
-const blockFinderPlugin = require("mineflayer-blockfinder")(mineflayer);
+const { mineflayer: mineflayerViewer } = require("prismarine-viewer");
 const bot = mineflayer.createBot({
-  username: "zPrutsor",
-  port: 62974,
-  host: "localhost",
+  username: process.env.USERNAME,
+  port: process.argv[2],
+  host: process.argv[3] || "localhost",
+  password: process.env.PASSWORD,
 });
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+bot.loadPlugin(autoeat);
 bot.loadPlugin(require("mineflayer-collectblock").plugin);
 bot.loadPlugin(pathfinder);
 
@@ -43,22 +48,6 @@ const get_me_some_bamboo = () => {
       !done
     ) {
       done = true;
-      // await bot.pathfinder.setMovements(new Movements(bot, mcData));
-      // await bot.pathfinder.setGoal(
-      //   new GoalBreakBlock(
-      //     block.position.x,
-      //     block.position.y,
-      //     block.position.z,
-      //     bot
-      //   )
-      // );
-      // try {
-      //   await bot.lookAt(block_pos);
-      //   await delay(200);
-      //   await bot.dig(block);
-      // } catch (err) {
-      //   console.log(err);
-      // }
       bot.collectBlock.collect(block_under, (err) => {
         console.log("Collected");
         place_some_bamboo();
@@ -82,6 +71,7 @@ const place_some_bamboo = async () => {
   console.log("found blocks");
 
   let done = false;
+  // console.log(blocks.length);
   for (var i = 0; i < blocks.length; i++) {
     // console.log(i);
     const block_pos = blocks[i];
@@ -89,7 +79,10 @@ const place_some_bamboo = async () => {
     const block_above = bot.blockAt(block_pos.offset(0, 1, 0));
 
     // console.log("wow");
-    if (block_above.name === "air" && !done) {
+    // console.log(block_above.name, done);
+    if ((block_above.name === "air" || block_above.name === "grass") && !done) {
+      console.log("found a place to place");
+
       done = true;
       const bamboo = bot.inventory.findInventoryItem("bamboo", null);
 
@@ -144,7 +137,24 @@ bot.on("physicTick", () => {
   }
 });
 
-bot.on("spawn", () => {
-  // get_me_some_bamboo();
+bot.on("spawn", async () => {
+  await bot.waitForChunksToLoad();
+  bot.autoEat.options.priority = "foodPoints";
+  bot.autoEat.options.bannedFood = [];
+  bot.autoEat.options.eatingTimeout = 3;
+
+  mineflayerViewer(bot, { port: 3007, firstPerson: false });
+
   place_some_bamboo();
+});
+
+bot.on("error", (err) => {
+  console.log(err);
+  process.exit(0);
+});
+
+bot.on("health", () => {
+  if (bot.food === 20) bot.autoEat.disable();
+  // Disable the plugin if the bot is at 20 food points
+  else bot.autoEat.enable(); // Else enable the plugin again
 });
