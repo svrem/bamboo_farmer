@@ -5,7 +5,7 @@ const autoeat = require("mineflayer-auto-eat");
 const Vec3 = require("vec3");
 const pathfinder = require("mineflayer-pathfinder").pathfinder;
 const Movements = require("mineflayer-pathfinder").Movements;
-const { GoalNear, GoalBreakBlock } = require("mineflayer-pathfinder").goals;
+const { GoalNear } = require("mineflayer-pathfinder").goals;
 const { mineflayer: mineflayerViewer } = require("prismarine-viewer");
 const bot = mineflayer.createBot({
   username: process.env.USERNAME,
